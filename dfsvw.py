@@ -56,7 +56,7 @@ def probeAllLink(fn):
 def outputNode(link, name, level):
     """output one wiki node, level for vimwiki tree hierarchy"""
     prefix = " " * 4 * level
-    dct = {"prefix":prefix, "link":link, "name":name}
+    dct = {"prefix": prefix, "link": link, "name": name}
     if sys.stdout.isatty():
         fmt = "{prefix}{name}"
     else:
@@ -72,6 +72,7 @@ def dfs(index):
     skip searched wiki file to avoid deadloop"""
     index = index.decode('utf8')
     lst = [(index, index, 0)]
+    g = []
     hist = []
     while 1:
         try:
@@ -80,13 +81,16 @@ def dfs(index):
             break
         if link in hist:
             print >> sys.stderr, "link {} already in map".format(link)
-            continue
+            # continue
         hist.append(link)
-        outputNode(link, name, level)
         ret = probeAllLink(link + '.wiki')
+        for i in ret:
+            g.append((name, i[1]))
         level += 1
         levelret = [(node[0], node[1], level) for node in ret]
         lst = levelret + lst
+    print "lst = ",
+    print g
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
