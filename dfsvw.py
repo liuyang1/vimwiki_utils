@@ -72,25 +72,25 @@ def dfs(index):
     skip searched wiki file to avoid deadloop"""
     index = index.decode('utf8')
     lst = [(index, index, 0)]
-    g = []
-    hist = []
+    nodemap = {}
+    edgelst = []
     while 1:
         try:
             link, name, level = lst.pop(0)
         except IndexError:
             break
-        if link in hist:
+        if link in nodemap.values():
             print >> sys.stderr, "link {} already in map".format(link)
             # continue
-        hist.append(link)
+        nodemap[link] = name
         ret = probeAllLink(link + '.wiki')
         for i in ret:
-            g.append((name, i[1]))
+            edgelst.append((link, i[0]))
         level += 1
         levelret = [(node[0], node[1], level) for node in ret]
         lst = levelret + lst
-    print "lst = ",
-    print g
+    print "nodemap = ", nodemap
+    print "edgelst = ", edgelst
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
