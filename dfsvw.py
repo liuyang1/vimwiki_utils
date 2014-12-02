@@ -14,9 +14,11 @@ Example:
 Python version: 2"""
 import sys
 import re
+import os
 
 linkRE = re.compile(r'(?<=\[\[)\w+(?=[|\]])', re.UNICODE)
 nameRE = re.compile(r'(?<=[|\[])[^|\[\]]+(?=\]\])', re.UNICODE)
+suffix = '.wiki'
 
 
 def probeLink(s):
@@ -49,7 +51,7 @@ def probeAllLink(fn):
             l = probeLink(line)
             lst.extend(l)
     except IOError:
-        print >> sys.stderr, "cannot open", fn
+        print >> sys.stderr, "cannot open\t", fn
     return lst
 
 
@@ -67,6 +69,17 @@ def outputNode(link, name, level):
     print fmt.format(**dct)
 
 
+def addLost(d, nodemap):
+    nodelst = [i + suffix for i in nodemap.keys()]
+    for p, dnames, fnames in os.walk(d):
+        for f in fnames:
+            if f.endswith(suffix) and f not in nodelst:
+                f = f[0:-5]
+                print >> sys.stderr, "node not in list\t", f
+                nodemap[f] = f
+    return nodemap
+
+
 def dfs(index):
     """depth first search on vimwiki
     skip searched wiki file to avoid deadloop"""
@@ -80,17 +93,18 @@ def dfs(index):
         except IndexError:
             break
         if link in nodemap.values():
-            print >> sys.stderr, "link {} already in map".format(link)
-            # continue
+            pass
         nodemap[link] = name
-        ret = probeAllLink(link + '.wiki')
+        ret = probeAllLink(link + suffix)
         for i in ret:
             edgelst.append((link, i[0]))
         level += 1
         levelret = [(node[0], node[1], level) for node in ret]
         lst = levelret + lst
+    addLost('.', nodemap)
     print "nodemap = ", nodemap
     print "edgelst = ", edgelst
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
